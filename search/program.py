@@ -4,6 +4,13 @@
 from .core import CellState, Coord, Direction, MoveAction
 from .utils import render_board
 
+# as we are not using the up direction for part a of this project im adding all the avalible directions as a list here
+dirPartA = [
+        (1, 0),
+        (1, 1),
+        (1, -1),
+        (0, 1),
+        (0, -1)]
 
 def search(
     board: dict[Coord, CellState]
@@ -30,7 +37,11 @@ def search(
     print(render_board(board, ansi=True))
 
     # Do some impressive AI stuff here to find the solution...
-    # ...
+
+    # testing start for vis 1, 3 and 4
+    generatePaths(board, Coord(0, 5))
+
+
     # ... (your solution goes here!)
     # ...
 
@@ -46,3 +57,85 @@ def search(
         MoveAction(Coord(5, 4), [Direction.Down]),
         MoveAction(Coord(6, 4), [Direction.Down]),
     ]
+
+# function that will generate the coordinates of all possible moves a frog can make in a current position
+# should take into account if the position is occupied by a frog
+# should check if there is a lilypad
+# chould check for leeping or multiple leeping
+def generatePaths(
+        board: dict[Coord, CellState],
+        coordinate: Coord
+        ) -> list[Coord] | None: # needs return type
+    # retrun list
+    coordList:list[Coord] = []
+
+    # check up, down, left, right, down left and down right
+    for move in dirPartA:
+        try:
+            tempCoord = Coord(coordinate.r + move[0], coordinate.c + move[1])
+        except:
+            continue
+
+        # check that the position exists in the board 
+        if tempCoord not in board:
+            continue
+        
+
+        # check for empty lilypads
+        if board.get(tempCoord) == CellState.LILY_PAD:
+            # add to list
+            coordList.append(tempCoord)
+            continue
+
+        # all others are frogs
+        # check for leeping
+
+        leepingList:list[Coord] = checkLeeping(board, tempCoord, coordinate, move)
+        coordList.extend(leepingList)
+    
+    # print list for testing purposes
+    print(coordList)
+    return coordList
+            
+
+# check for leeping and return all possible coorinates from a leep (eg// leep once or multiple times)
+def checkLeeping(
+        board: dict[Coord, CellState],
+        leepingCoord: Coord,
+        previousCoord: Coord,
+        dir: tuple[int, int]
+        ) -> list[Coord]:
+    leepingList:list[Coord] = [] 
+
+    # check for valid finish position
+    try:
+        targetCoord = Coord(leepingCoord.r + dir[0], leepingCoord.c + dir[1])
+    except:
+        return leepingList
+
+    if targetCoord not in board or board.get(targetCoord) != CellState.LILY_PAD:
+        return leepingList
+
+    # add to list
+    leepingList.append(targetCoord)
+    
+    # check if further leeping
+    for move in dirPartA:
+        try: 
+            futureLeepingCoord = Coord(targetCoord.r + move[0], targetCoord.c + move[1]) 
+            futureTargetCoord = Coord(futureLeepingCoord.r + move[0], futureLeepingCoord.c + move[1]) 
+        except:
+            continue
+
+        # exlude previous move
+        if futureTargetCoord.r == previousCoord.r and futureTargetCoord.c == previousCoord.c:
+            continue
+        
+        # check if jumpable square
+        if futureLeepingCoord not in board or board.get(futureLeepingCoord) == CellState.LILY_PAD:
+            continue
+
+        # preform leeping list on potenual hit
+        leepingList.extend(checkLeeping(board, futureLeepingCoord, targetCoord, move))
+
+    return leepingList
