@@ -1,7 +1,8 @@
 # COMP30024 Artificial Intelligence, Semester 1 2025
 # Project Part A: Single Player Freckers
 
-from .core import CellState, Coord, Direction, MoveAction
+from typing import Dict, List
+from .core import BOARD_N, CellState, Coord, Direction, MoveAction
 from .utils import render_board
 
 # as we are not using the up direction for part a of this project im adding all the avalible directions as a list here
@@ -39,7 +40,8 @@ def search(
     # Do some impressive AI stuff here to find the solution...
 
     # testing start for vis 1, 3 and 4
-    generatePaths(board, Coord(0, 5))
+    bfsSearch(board, Coord(0, 5), BOARD_N)
+    # generatePaths(board, Coord(0, 5))
 
 
     # ... (your solution goes here!)
@@ -65,7 +67,7 @@ def search(
 def generatePaths(
         board: dict[Coord, CellState],
         coordinate: Coord
-        ) -> list[Coord] | None: # needs return type
+        ) -> list[Coord]: # needs return type
     # retrun list
     coordList:list[Coord] = []
 
@@ -139,3 +141,44 @@ def checkLeeping(
         leepingList.extend(checkLeeping(board, futureLeepingCoord, targetCoord, move))
 
     return leepingList
+
+
+# bfs search algorithm implimentation 
+# must preform bfs as well as keep track of the path
+def bfsSearch(
+    board: dict[Coord, CellState],
+    startCoord: Coord,
+    endValue: int, 
+) -> list[MoveAction] | None:
+    
+    # bfs "queue" (coord, previous coord) pairs
+    queue = []
+    # list of coordinate key previous coordinate values pairs to reverse engeneer path {Coord: Coord}
+    # -1 means that it was the start
+    record = {}
+    # list of visited Coords 
+    visited = []
+
+    # add first coordinate to lists
+    visited.append(startCoord) 
+    record[startCoord] = -1
+    
+    # pop first item and generate paths
+    possiblePositions = generatePaths(board, startCoord)
+    positionsCombined = list(zip(possiblePositions,
+                            [startCoord for i in range(len(possiblePositions)-1)])) 
+    while len(queue) > 0:
+        # pop first item from queue
+        position = queue.pop(0) 
+
+        # check if in visited
+        if position in visited:
+            continue
+
+        # add to visited
+        visited.append(position)
+        # add to record
+        
+
+    pass
+
