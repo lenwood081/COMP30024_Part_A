@@ -167,17 +167,31 @@ def bfsSearch(
     possiblePositions = generatePaths(board, startCoord)
     positionsCombined = list(zip(possiblePositions,
                             [startCoord for i in range(len(possiblePositions)-1)])) 
+    queue.extend(positionsCombined)
+
     while len(queue) > 0:
         # pop first item from queue
         position = queue.pop(0) 
 
         # check if in visited
-        if position in visited:
+        if position[0] in visited:
             continue
 
         # add to visited
         visited.append(position)
         # add to record
+        record[position[0]] = position[1] 
+
+        # check win condition
+        if position[0].r == BOARD_N -1:
+            print("solution found")
+            break
+
+        # expand all child nodes
+        possiblePositions = generatePaths(board, position[0])
+        positionsCombined = list(zip(possiblePositions,
+                            [position[0] for i in range(len(possiblePositions)-1)])) 
+        queue.extend(positionsCombined)
         
 
     pass
