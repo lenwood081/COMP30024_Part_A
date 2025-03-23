@@ -41,7 +41,10 @@ def search(
     # Do some impressive AI stuff here to find the solution...
 
     # testing start for vis 1, 3 and 4
-    solution = bfsSearch(board, Coord(0, 5))
+    startCoord = findRedFrog(board)
+    if startCoord == None:
+        return None
+    solution = bfsSearch(board, startCoord)
 
 
     # ... (your solution goes here!)
@@ -60,6 +63,21 @@ def search(
         MoveAction(Coord(5, 4), [Direction.Down]),
         MoveAction(Coord(6, 4), [Direction.Down]),
     ]
+
+# find starting coordinate, or the first red frog 
+def findRedFrog(
+        board: dict[Coord, CellState],
+) -> Coord | None:
+    for r in range(BOARD_N):
+        for c in range(BOARD_N):
+            tempCoord = Coord(r, c)
+            # check that it exists
+            if tempCoord not in board:
+                continue
+            if board[tempCoord] == CellState.RED:
+                return tempCoord
+    return None
+
 
 # function that will generate the coordinates of all possible moves a frog can make in a current position
 # should take into account if the position is occupied by a frog
