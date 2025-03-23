@@ -41,7 +41,7 @@ def search(
     # Do some impressive AI stuff here to find the solution...
 
     # testing start for vis 1, 3 and 4
-    bfsSearch(board, Coord(0, 5), BOARD_N)
+    solution = bfsSearch(board, Coord(0, 5))
     # generatePaths(board, Coord(0, 5))
 
 
@@ -52,6 +52,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
+    return solution
     return [
         MoveAction(Coord(0, 5), [Direction.Down]),
         MoveAction(Coord(1, 5), [Direction.DownLeft]),
@@ -147,7 +148,6 @@ def checkLeeping(
 def bfsSearch(
     board: dict[Coord, CellState],
     startCoord: Coord,
-    endValue: int, 
 ) -> list[MoveAction] | None:
     
     # bfs "queue" (coord, previous coord) pairs
@@ -181,8 +181,7 @@ def bfsSearch(
 
         # check win condition
         if position[0].r == BOARD_N -1:
-            findCoord = position[0]
-            print("solution found")
+            finalCoord = position[0]
             break
 
         # expand all child nodes
@@ -197,7 +196,7 @@ def bfsSearch(
     # check if a solutionCoord exits
     # if not just return a empty list
     if finalCoord == None:
-        return []
+        return None 
 
     # need to figure out direction of movement as well
     currentCoord = finalCoord
@@ -211,9 +210,10 @@ def bfsSearch(
         # change to next position
         currentCoord = previousCoord
         previousCoord = record[currentCoord]
-
-    print(moves)
-    pass
+    
+    # reversed moves to start from begining
+    reversedMoves = moves[::-1]    
+    return reversedMoves 
 
 # determine direction of movement from two Coords
 def getDirection(startCoord: Coord, endCoord: Coord) -> list[Direction]:
