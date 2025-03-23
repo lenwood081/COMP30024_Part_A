@@ -1,6 +1,7 @@
 # COMP30024 Artificial Intelligence, Semester 1 2025
 # Project Part A: Single Player Freckers
 
+from re import finditer
 from typing import Dict, List
 from .core import BOARD_N, CellState, Coord, Direction, MoveAction
 from .utils import render_board
@@ -95,8 +96,6 @@ def generatePaths(
         leepingList:list[Coord] = checkLeeping(board, tempCoord, coordinate, move)
         coordList.extend(leepingList)
     
-    # print list for testing purposes
-    print(coordList)
     return coordList
             
 
@@ -154,19 +153,19 @@ def bfsSearch(
     # bfs "queue" (coord, previous coord) pairs
     queue = []
     # list of coordinate key previous coordinate values pairs to reverse engeneer path {Coord: Coord}
-    # -1 means that it was the start
+    #  None means that it was the start
     record = {}
-    # list of visited Coords 
-    visited = []
 
     # add first coordinate to lists
-    visited.append(startCoord) 
-    record[startCoord] = -1
+    record[startCoord] = None 
+
+    # solution Coord
+    finalCoord = None
     
     # pop first item and generate paths
     possiblePositions = generatePaths(board, startCoord)
     positionsCombined = list(zip(possiblePositions,
-                            [startCoord for i in range(len(possiblePositions)-1)])) 
+                            [startCoord for i in range(len(possiblePositions))])) 
     queue.extend(positionsCombined)
 
     while len(queue) > 0:
@@ -174,25 +173,62 @@ def bfsSearch(
         position = queue.pop(0) 
 
         # check if in visited
-        if position[0] in visited:
+        if position[0] in record:
             continue
 
-        # add to visited
-        visited.append(position)
         # add to record
         record[position[0]] = position[1] 
 
         # check win condition
         if position[0].r == BOARD_N -1:
+            findCoord = position[0]
             print("solution found")
             break
 
         # expand all child nodes
         possiblePositions = generatePaths(board, position[0])
         positionsCombined = list(zip(possiblePositions,
-                            [position[0] for i in range(len(possiblePositions)-1)])) 
+                            [position[0] for i in range(len(possiblePositions))])) 
         queue.extend(positionsCombined)
-        
+    
+    # now to reconstruct the solution from the record
+    moves:list[MoveAction] = []
+   
+    # check if a solutionCoord exits
+    # if not just return a empty list
+    if finalCoord == None:
+        return []
 
+    # need to figure out direction of movement as well
+    currentCoord = finalCoord
+    previousCoord = record[finalCoord]
+    
+    # loop through until start is reached
+    while previousCoord != None:
+        newDir = getDirection(previousCoord, currentCoord)
+        moves.append(MoveAction(previousCoord, newDir))
+
+        # change to next position
+        currentCoord = previousCoord
+        previousCoord = record[currentCoord]
+
+    print(moves)
     pass
 
+# determine direction of movement from two Coords
+def getDirection(startCoord: Coord, endCoord: Coord) -> list[Direction]:
+    dirlist = []
+        
+    # check down
+    if startCoord.r < endCoord.r:
+        dirlist.append(Direction.Down)
+
+    # check left
+    if startCoord.c > endCoord.c:
+        dirlist.append(Direction.Left)
+
+    # check reight 
+    if startCoord.c < endCoord.c:
+        dirlist.append(Direction.Right)
+
+    return dirlist
