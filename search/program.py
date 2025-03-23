@@ -42,7 +42,6 @@ def search(
 
     # testing start for vis 1, 3 and 4
     solution = bfsSearch(board, Coord(0, 5))
-    # generatePaths(board, Coord(0, 5))
 
 
     # ... (your solution goes here!)
@@ -69,9 +68,9 @@ def search(
 def generatePaths(
         board: dict[Coord, CellState],
         coordinate: Coord
-        ) -> list[Coord]: # needs return type
+        ) -> list[tuple[Coord, list[Direction]]]: # needs return type
     # retrun list
-    coordList:list[Coord] = []
+    coordList:list[tuple[Coord, list[Direction]]] = []
 
     # check up, down, left, right, down left and down right
     for move in dirPartA:
@@ -88,13 +87,15 @@ def generatePaths(
         # check for empty lilypads
         if board.get(tempCoord) == CellState.LILY_PAD:
             # add to list
-            coordList.append(tempCoord)
+            dirList = []
+            dirList.append(getDirection(coordinate, tempCoord))
+            coordList.append((tempCoord, dirList))
             continue
 
         # all others are frogs
         # check for leeping
 
-        leepingList:list[Coord] = checkLeeping(board, tempCoord, coordinate, move)
+        leepingList = checkLeeping(board, tempCoord, coordinate, move, [])
         coordList.extend(leepingList)
     
     return coordList
@@ -105,9 +106,10 @@ def checkLeeping(
         board: dict[Coord, CellState],
         leepingCoord: Coord,
         previousCoord: Coord,
-        dir: tuple[int, int]
-        ) -> list[Coord]:
-    leepingList:list[Coord] = [] 
+        dir: tuple[int, int],
+        dirListOld: list[Direction]
+        ) -> list[tuple[Coord, list[Direction]]]:
+    leepingList:list[tuple[Coord, list[Direction]]] = [] 
 
     # check for valid finish position
     try:
@@ -118,8 +120,9 @@ def checkLeeping(
     if targetCoord not in board or board.get(targetCoord) != CellState.LILY_PAD:
         return leepingList
 
-    # add to list
-    leepingList.append(targetCoord)
+    # add to list 
+    dirListOld.append(getDirection(previousCoord, targetCoord))
+    leepingList.append((targetCoord, dirListOld.copy()))
     
     # check if further leeping
     for move in dirPartA:
@@ -138,7 +141,9 @@ def checkLeeping(
             continue
 
         # preform leeping list on potenual hit
-        leepingList.extend(checkLeeping(board, futureLeepingCoord, targetCoord, move))
+        # add to direction list
+        tempDirList = dirListOld.copy()
+        leepingList.extend(checkLeeping(board, futureLeepingCoord, targetCoord, move, tempDirList))
 
     return leepingList
 
@@ -150,11 +155,11 @@ def bfsSearch(
     startCoord: Coord,
 ) -> list[MoveAction] | None:
     
-    # bfs "queue" (coord, previous coord) pairs
-    queue = []
+    # bfs "queue" (coord, direction listing previous transition, previous Coord) pairs
+    queue: list[tuple[tuple[Coord, list[Direction]], Coord]] = []
     # list of coordinate key previous coordinate values pairs to reverse engeneer path {Coord: Coord}
     #  None means that it was the start
-    record = {}
+    record: dict[Coord, tuple[Coord, list[Direction]] | None] = {}
 
     # add first coordinate to lists
     record[startCoord] = None 
@@ -173,21 +178,21 @@ def bfsSearch(
         position = queue.pop(0) 
 
         # check if in visited
-        if position[0] in record:
+        if position[0][0] in record:
             continue
 
         # add to record
-        record[position[0]] = position[1] 
+        record[position[0][0]] = (position[1], position[0][1]) 
 
         # check win condition
-        if position[0].r == BOARD_N -1:
-            finalCoord = position[0]
+        if position[0][0].r == BOARD_N -1:
+            finalCoord = position[0][0]
             break
 
         # expand all child nodes
-        possiblePositions = generatePaths(board, position[0])
+        possiblePositions = generatePaths(board, position[0][0])
         positionsCombined = list(zip(possiblePositions,
-                            [position[0] for i in range(len(possiblePositions))])) 
+                            [position[0][0] for i in range(len(possiblePositions))])) 
         queue.extend(positionsCombined)
     
     # now to reconstruct the solution from the record
@@ -199,36 +204,36 @@ def bfsSearch(
         return None 
 
     # need to figure out direction of movement as well
-    currentCoord = finalCoord
     previousCoord = record[finalCoord]
     
     # loop through until start is reached
     while previousCoord != None:
-        newDir = getDirection(previousCoord, currentCoord)
-        moves.append(MoveAction(previousCoord, newDir))
+        moves.append(MoveAction(previousCoord[0], previousCoord[1]))
 
         # change to next position
-        currentCoord = previousCoord
-        previousCoord = record[currentCoord]
+        previousCoord = record[previousCoord[0]]
     
     # reversed moves to start from begining
     reversedMoves = moves[::-1]    
     return reversedMoves 
 
 # determine direction of movement from two Coords
-def getDirection(startCoord: Coord, endCoord: Coord) -> list[Direction]:
-    dirlist = []
+def getDirection(startCoord: Coord, endCoord: Coord) -> Direction:
         
     # check down
     if startCoord.r < endCoord.r:
-        dirlist.append(Direction.Down)
+        # check left 
+        if startCoord.c > endCoord.c:
+            return Direction.DownLeft
+        # check right
+        if startCoord.c < endCoord.c:
+            return Direction.DownRight
+        return Direction.Down
 
     # check left
     if startCoord.c > endCoord.c:
-        dirlist.append(Direction.Left)
+        return Direction.Left
 
     # check reight 
-    if startCoord.c < endCoord.c:
-        dirlist.append(Direction.Right)
+    return Direction.Right
 
-    return dirlist
