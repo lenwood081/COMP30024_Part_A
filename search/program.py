@@ -64,6 +64,8 @@ def search(
         MoveAction(Coord(6, 4), [Direction.Down]),
     ]
 
+# -------------------------------------- utility functions -----------------
+
 # find starting coordinate, or the first red frog 
 def findRedFrog(
         board: dict[Coord, CellState],
@@ -77,6 +79,27 @@ def findRedFrog(
             if board[tempCoord] == CellState.RED:
                 return tempCoord
     return None
+
+# determine direction of movement from two Coords
+def getDirection(startCoord: Coord, endCoord: Coord) -> Direction:
+        
+    # check down
+    if startCoord.r < endCoord.r:
+        # check left 
+        if startCoord.c > endCoord.c:
+            return Direction.DownLeft
+        # check right
+        if startCoord.c < endCoord.c:
+            return Direction.DownRight
+        return Direction.Down
+
+    # check left
+    if startCoord.c > endCoord.c:
+        return Direction.Left
+
+    # check reight 
+    return Direction.Right
+
 
 
 # function that will generate the coordinates of all possible moves a frog can make in a current position
@@ -166,7 +189,8 @@ def checkLeeping(
     return leepingList
 
 
-# bfs search algorithm implimentation 
+# --------------------------------------- breadth first search ------------------------------
+
 # must preform bfs as well as keep track of the path
 def bfsSearch(
     board: dict[Coord, CellState],
@@ -235,23 +259,52 @@ def bfsSearch(
     reversedMoves = moves[::-1]    
     return reversedMoves 
 
-# determine direction of movement from two Coords
-def getDirection(startCoord: Coord, endCoord: Coord) -> Direction:
-        
-    # check down
-    if startCoord.r < endCoord.r:
-        # check left 
-        if startCoord.c > endCoord.c:
-            return Direction.DownLeft
-        # check right
-        if startCoord.c < endCoord.c:
-            return Direction.DownRight
-        return Direction.Down
+# ------------------------------------- A* search -------------------------------------------
 
-    # check left
-    if startCoord.c > endCoord.c:
-        return Direction.Left
+# A star algorithm
+def aStar(
+        board: dict[Coord, CellState],
+        startCoord: Coord        
+) -> list[MoveAction] | None:
+    
+    # a sorted list af all generated positions, with their cost to reach (number of moves) 
+    #   current coord, list of directions, previous coord, cost of G(n), cost F(n)
+    queue: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = []
+    # list of coordinate key previous coordinate values pairs to reverse engeneer path {Coord: Coord}
+    #  None means that it was the start
+    record: dict[Coord, tuple[Coord, list[Direction]] | None] = {}
 
-    # check reight 
-    return Direction.Right
+    # add starting node to the record
+    record[startCoord]
+    
+    # push possible positions to queue in sorted order
 
+# a method that generates paths from a position, calculates their eitimated cost and inserts them into a soted list
+def addNewAPositions(
+        board: dict[Coord, CellState],
+        currentCoord: Coord,
+        currentCost: int,
+        currentList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]
+) -> list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]:
+    templist = generatePaths(board, currentCoord)
+
+    # sorry this is a bit of a mess
+    newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
+
+    # insert into new list based on heuristic cost which is the last value in the list(tuple()) setup
+    newList = currentList.copy()
+    
+    # use a binary search and insert strategy
+    if len(newList) == 0:
+        newList.append(newPositionsList.pop(0))
+
+    for i in range(len(newPositionsList)):
+        pass
+    return newList
+
+# A star heuristic, just determine the distance to the end, or number or rows to the end
+def distanceToEnd(
+        currentCoord: Coord,
+        pathCost: int
+) -> int:
+    return (BOARD_N-1) - currentCoord.r + pathCost 
