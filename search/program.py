@@ -55,14 +55,6 @@ def search(
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
     return solution
-    return [
-        MoveAction(Coord(0, 5), [Direction.Down]),
-        MoveAction(Coord(1, 5), [Direction.DownLeft]),
-        MoveAction(Coord(3, 3), [Direction.Left]),
-        MoveAction(Coord(3, 2), [Direction.Down, Direction.Right]),
-        MoveAction(Coord(5, 4), [Direction.Down]),
-        MoveAction(Coord(6, 4), [Direction.Down]),
-    ]
 
 # -------------------------------------- utility functions -----------------
 
