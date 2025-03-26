@@ -1,5 +1,6 @@
 # COMP30024 Artificial Intelligence, Semester 1 2025
 # Project Part A: Single Player Freckers
+import math
 
 from re import finditer
 from typing import Dict, List
@@ -44,8 +45,7 @@ def search(
     startCoord = findRedFrog(board)
     if startCoord == None:
         return None
-    solution = bfsSearch(board, startCoord)
-
+    solution = aStar(board, startCoord)
 
     # ... (your solution goes here!)
     # ...
@@ -274,10 +274,63 @@ def aStar(
     #  None means that it was the start
     record: dict[Coord, tuple[Coord, list[Direction]] | None] = {}
 
+    # finalCoord, if none then position is unreachable
+    finalCoord: Coord | None = None
+
     # add starting node to the record
-    record[startCoord]
+    record[startCoord] = None
+
     
     # push possible positions to queue in sorted order
+    queue = addNewAPositions(board, startCoord, 1, queue)
+
+
+    
+    # loop unitl done
+    while len(queue) > 0:
+         # pop first item from queue
+        position = queue.pop(0) 
+
+        # check if in visited
+        if position[0][0] in record:
+            continue
+
+        # add to record
+        record[position[0][0]] = (position[1], position[0][1]) 
+
+        # check win condition
+        if position[0][0].r == BOARD_N -1:
+            finalCoord = position[0][0]
+            break
+
+        # add new items to the queue based on heuristic
+        queue = addNewAPositions(board, position[0][0], position[2]+1, queue)
+        
+ 
+    # now to reconstruct the solution from the record
+    moves:list[MoveAction] = []
+   
+    # check if a solutionCoord exits
+    # if not just return a empty list
+    if finalCoord == None:
+        return None 
+
+    # need to figure out direction of movement as well
+    previousCoord = record[finalCoord]
+    
+    # loop through until start is reached
+    while previousCoord != None:
+        moves.append(MoveAction(previousCoord[0], previousCoord[1]))
+
+        # change to next position
+        previousCoord = record[previousCoord[0]]
+    
+    # reversed moves to start from begining
+    reversedMoves = moves[::-1]    
+    return reversedMoves 
+
+
+       
 
 # a method that generates paths from a position, calculates their eitimated cost and inserts them into a soted list
 def addNewAPositions(
@@ -299,8 +352,43 @@ def addNewAPositions(
         newList.append(newPositionsList.pop(0))
 
     for i in range(len(newPositionsList)):
-        pass
+        upper: int = len(newList)-1
+        lower: int = 0
+
+        # check if lower then low bound
+        if newPositionsList[i][3] <= newList[lower][3]:
+            newList.insert(lower, newPositionsList[i])
+            continue
+
+        # check if upper then high bound
+        if newPositionsList[i][3] >= newList[upper][3]:
+            newList.append(newPositionsList[i])
+            continue
+
+        while True:
+            temp = math.floor((upper+lower)/2)
+
+            if lower == temp:
+                # converged on position therfor insert after
+                newList.insert(temp+1, newPositionsList[i])
+                break
+                
+
+            # check if higher or lower then temp
+            if newPositionsList[i][3] > newList[temp][3]:
+                lower = temp
+                continue 
+            if newPositionsList[i][3] < newList[temp][3]:
+                upper = temp
+                continue 
+
+            # if same then insert before
+            if newPositionsList[i][3] == newList[temp][3]:
+                newList.insert(temp, newPositionsList[i])
+                break
+
     return newList
+
 
 # A star heuristic, just determine the distance to the end, or number or rows to the end
 def distanceToEnd(
