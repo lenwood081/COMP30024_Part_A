@@ -272,20 +272,13 @@ def aStar(
     # add starting node to the record
     record[startCoord] = None
 
-    
     # push possible positions to queue in sorted order
     queue = addNewAPositions(board, startCoord, 1, queue)
 
-
-    
     # loop unitl done
     while len(queue) > 0:
          # pop first item from queue
         position = queue.pop(0) 
-
-        # check if in visited
-        if position[0][0] in record:
-            continue
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -297,7 +290,6 @@ def aStar(
 
         # add new items to the queue based on heuristic
         queue = addNewAPositions(board, position[0][0], position[2]+1, queue)
-        
  
     # now to reconstruct the solution from the record
     moves:list[MoveAction] = []
@@ -321,8 +313,6 @@ def aStar(
     reversedMoves = moves[::-1]    
     return reversedMoves 
 
-
-       
 
 # a method that generates paths from a position, calculates their eitimated cost and inserts them into a soted list
 def addNewAPositions(
