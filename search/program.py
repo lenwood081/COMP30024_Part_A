@@ -4,6 +4,7 @@ import math
 
 from re import finditer
 from typing import Dict, List
+
 from .core import BOARD_N, CellState, Coord, Direction, MoveAction
 from .utils import render_board
 
@@ -14,6 +15,11 @@ dirPartA = [
         (1, -1),
         (0, 1),
         (0, -1)]
+
+# global varible is here only for testing and comparing the search strategies
+bfSexpandedNodes = 0
+bfSRepeatedNodes = 0
+aStarexpandedNodes = 0
 
 def search(
     board: dict[Coord, CellState]
@@ -45,7 +51,11 @@ def search(
     startCoord = findRedFrog(board)
     if startCoord == None:
         return None
-    solution = aStar(board, startCoord)
+    solution1 = aStar(board, startCoord)
+    solution2 = bfsSearch(board, startCoord)
+
+    # comarisons
+    solutionEvaluation(solution2, solution1)
 
     # ... (your solution goes here!)
     # ...
@@ -54,7 +64,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
-    return solution
+    return solution1
 
 # -------------------------------------- utility functions -----------------
 
@@ -213,7 +223,14 @@ def bfsSearch(
 
         # check if in visited
         if position[0][0] in record:
+            # global varible for checking how well state checking went
+            global bfSRepeatedNodes
+            bfSRepeatedNodes += 1
             continue
+
+        # global varible for checking expanded nodes
+        global bfSexpandedNodes
+        bfSexpandedNodes += 1
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -279,6 +296,10 @@ def aStar(
     while len(queue) > 0:
          # pop first item from queue
         position = queue.pop(0) 
+        
+        # global vairble to record expanded node
+        global aStarexpandedNodes
+        aStarexpandedNodes += 1
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -378,3 +399,27 @@ def distanceToEnd(
         pathCost: int
 ) -> int:
     return (BOARD_N-1) - currentCoord.r + pathCost 
+ 
+
+# ------------------------------------------ for determineing algorithm efficiency -------------------
+
+def solutionEvaluation(solutionBfs, solutionAstar):
+    # compare solutions
+    print("Solution for BFS:")
+    # print_result(solutionBfs)
+    print("\n\n---------------------------------------------\n\n")
+    print("Solution for A*:")
+    # print_result(solutionAstar)
+    print("\n\n---------------------------------------------\n\n")
+
+    print("BFS analysis:")
+    print(f"Number of expanded Nodes: {bfSexpandedNodes}")
+    print(f"Number of repeated Nodes blocked by repeated state checking: {bfSRepeatedNodes}")
+
+    print("\n\n---------------------------------------------\n\n")
+    print("A* analysis")
+    print(f"Number of expanded Nodes: {aStarexpandedNodes}")
+    print("\n\n---------------------------------------------\n\n")
+    
+
+
