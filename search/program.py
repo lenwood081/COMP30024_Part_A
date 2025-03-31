@@ -349,8 +349,11 @@ def addNewAPositions(
     templist = generatePaths(board, currentCoord)
 
     # sorry this is a bit of a mess
+    # this is using distance to the end as a heuristic
     newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
 
+    # this is using a admissable heuristic
+    # newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [admissable(currentCost) for entry in templist]))
     # insert into new list based on heuristic cost which is the last value in the list(tuple()) setup
     newList = currentList.copy()
     
@@ -403,6 +406,12 @@ def distanceToEnd(
         pathCost: int
 ) -> int:
     return (BOARD_N-1) - currentCoord.r + pathCost 
+
+# admissable a* heuristic, just 1, because that is the only value to the end that is not an overestimation
+def admissable(
+        pathCost: int
+) -> int:
+    return pathCost + 1
  
 
 # ------------------------------------------ for determineing algorithm efficiency -------------------
