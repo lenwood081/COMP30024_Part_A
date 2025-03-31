@@ -4,6 +4,7 @@ import math
 
 from re import finditer
 from typing import Dict, List
+
 from .core import BOARD_N, CellState, Coord, Direction, MoveAction
 from .utils import render_board
 
@@ -14,6 +15,11 @@ dirPartA = [
         (1, -1),
         (0, 1),
         (0, -1)]
+
+# global varible is here only for testing and comparing the search strategies
+bfSexpandedNodes = 0
+bfSRepeatedNodes = 0
+aStarexpandedNodes = 0
 
 def search(
     board: dict[Coord, CellState]
@@ -45,7 +51,11 @@ def search(
     startCoord = findRedFrog(board)
     if startCoord == None:
         return None
-    solution = aStar(board, startCoord)
+    solution1 = aStar(board, startCoord)
+    solution2 = bfsSearch(board, startCoord)
+
+    # comarisons
+    solutionEvaluation(solution2, solution1)
 
     # ... (your solution goes here!)
     # ...
@@ -54,7 +64,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
-    return solution
+    return solution2
 
 # -------------------------------------- utility functions -----------------
 
@@ -213,7 +223,14 @@ def bfsSearch(
 
         # check if in visited
         if position[0][0] in record:
+            # global varible for checking how well state checking went
+            global bfSRepeatedNodes
+            bfSRepeatedNodes += 1
             continue
+
+        # global varible for checking expanded nodes
+        global bfSexpandedNodes
+        bfSexpandedNodes += 1
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -279,6 +296,14 @@ def aStar(
     while len(queue) > 0:
          # pop first item from queue
         position = queue.pop(0) 
+        
+        # global vairble to record expanded node
+        global aStarexpandedNodes
+        aStarexpandedNodes += 1
+
+        # remove seen places (needed for cases where ther is no solution)
+        if position[0][0] in record:
+            continue
 
         # remove seen places (needed for cases where ther is no solution)
         if position[0][0] in record:
@@ -328,8 +353,11 @@ def addNewAPositions(
     templist = generatePaths(board, currentCoord)
 
     # sorry this is a bit of a mess
+    # this is using distance to the end as a heuristic
     newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
 
+    # this is using a admissable heuristic
+    # newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [admissable(currentCost) for entry in templist]))
     # insert into new list based on heuristic cost which is the last value in the list(tuple()) setup
     newList = currentList.copy()
     
@@ -382,3 +410,33 @@ def distanceToEnd(
         pathCost: int
 ) -> int:
     return (BOARD_N-1) - currentCoord.r + pathCost 
+
+# admissable a* heuristic, just 1, because that is the only value to the end that is not an overestimation
+def admissable(
+        pathCost: int
+) -> int:
+    return pathCost + 1
+ 
+
+# ------------------------------------------ for determineing algorithm efficiency -------------------
+
+def solutionEvaluation(solutionBfs, solutionAstar):
+    # compare solutions
+    print("Solution for BFS:")
+    # print_result(solutionBfs)
+    print("\n\n---------------------------------------------\n\n")
+    print("Solution for A*:")
+    # print_result(solutionAstar)
+    print("\n\n---------------------------------------------\n\n")
+
+    print("BFS analysis:")
+    print(f"Number of expanded Nodes: {bfSexpandedNodes}")
+    print(f"Number of repeated Nodes blocked by repeated state checking: {bfSRepeatedNodes}")
+
+    print("\n\n---------------------------------------------\n\n")
+    print("A* analysis")
+    print(f"Number of expanded Nodes: {aStarexpandedNodes}")
+    print("\n\n---------------------------------------------\n\n")
+    
+
+
