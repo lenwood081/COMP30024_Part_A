@@ -411,7 +411,33 @@ def distanceToEnd(
 ) -> int:
     return (BOARD_N-1) - currentCoord.r + pathCost 
 
-# admissable a* heuristic, just 1, because that is the only value to the end that is not an overestimation
+# admissable a* heuristic, create a array indicating the minimum amoutn of moves required to reach the end
+# from a row, use the check if there is a "b" or not
+def createAdmissableArray(
+    board: dict[Coord, CellState]
+) -> list[int]:
+    # create list of minimum number of moves
+    numberOfMoves = []
+
+    # list of which rows contain a blue frog
+    blueFrogList = [0 for i in range(BOARD_N)]
+
+    # populate blue frog list
+    for i in range(BOARD_N):
+        for j in range(BOARD_N):
+            tempCoord = Coord(i, j)
+            if tempCoord in board and board[tempCoord] == CellState.BLUE:
+                blueFrogList[i] = 1
+                break;
+
+    # for each row, check the how many possible jumps eg (if blueFrogList = 0, 1, 0, 1, 1, 1, 0) its only one move to the end
+
+    for i in range(BOARD_N):
+        while True:
+            pass
+
+    return numberOfMoves
+
 def admissable(
         pathCost: int
 ) -> int:
