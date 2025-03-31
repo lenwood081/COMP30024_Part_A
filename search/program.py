@@ -64,7 +64,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
-    return solution1
+    return solution2
 
 # -------------------------------------- utility functions -----------------
 
