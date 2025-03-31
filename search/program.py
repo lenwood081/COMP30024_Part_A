@@ -301,6 +301,10 @@ def aStar(
         global aStarexpandedNodes
         aStarexpandedNodes += 1
 
+        # remove seen places (needed for cases where ther is no solution)
+        if position[0][0] in record:
+            continue
+
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
 
