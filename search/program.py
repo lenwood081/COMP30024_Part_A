@@ -64,7 +64,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
-    return solution2
+    return solution1
 
 # -------------------------------------- utility functions -----------------
 
@@ -289,8 +289,11 @@ def aStar(
     # add starting node to the record
     record[startCoord] = None
 
+    # adjaceny array for admissable heuristic
+    adjArray = createAdmissableArray(board)
+
     # push possible positions to queue in sorted order
-    queue = addNewAPositions(board, startCoord, 1, queue)
+    queue = addNewAPositions(board, startCoord, 1, queue, adjArray)
 
     # loop unitl done
     while len(queue) > 0:
@@ -318,7 +321,7 @@ def aStar(
             break
 
         # add new items to the queue based on heuristic
-        queue = addNewAPositions(board, position[0][0], position[2]+1, queue)
+        queue = addNewAPositions(board, position[0][0], position[2]+1, queue, adjArray)
  
     # now to reconstruct the solution from the record
     moves:list[MoveAction] = []
@@ -348,17 +351,17 @@ def addNewAPositions(
         board: dict[Coord, CellState],
         currentCoord: Coord,
         currentCost: int,
-        currentList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]
+        currentList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]],
+        adjArray: list[int]
 ) -> list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]:
     templist = generatePaths(board, currentCoord)
 
     # sorry this is a bit of a mess
     # this is using distance to the end as a heuristic
-    newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
+     #newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
 
-    # this is using a admissable heuristic
-    # newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [admissable(currentCost) for entry in templist]))
-    # insert into new list based on heuristic cost which is the last value in the list(tuple()) setup
+    # this is using the addmissable heuristic
+    newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [admissable(currentCost, adjArray, entry[0]) for entry in templist]))
     newList = currentList.copy()
     
     # use a binary search and insert strategy
@@ -417,7 +420,7 @@ def createAdmissableArray(
     board: dict[Coord, CellState]
 ) -> list[int]:
     # create list of minimum number of moves
-    numberOfMoves = []
+    numberOfMoves = [0 for i in range(BOARD_N)]
 
     # list of which rows contain a blue frog
     blueFrogList = [0 for i in range(BOARD_N)]
@@ -433,15 +436,37 @@ def createAdmissableArray(
     # for each row, check the how many possible jumps eg (if blueFrogList = 0, 1, 0, 1, 1, 1, 0) its only one move to the end
 
     for i in range(BOARD_N):
-        while True:
-            pass
+        j = i 
+        moves = 0
+        jump = 0
+        while j+1 < BOARD_N:
+            if j+2 < BOARD_N and blueFrogList[j+1] == 1:
+                # can jump
+                j += 2
+                if jump == 0:
+                    jump = 1
+                    moves += 1
+                continue
+            # cant jump therfore simply move
+            jump = 0
+            j += 1
+            moves += 1
+        numberOfMoves[i] = moves
+        if i == BOARD_N -1:
+            numberOfMoves[i] = 0 
+
+    # for debugging
+    print(blueFrogList)
+    print(numberOfMoves)
 
     return numberOfMoves
 
 def admissable(
-        pathCost: int
+        pathCost: int,
+        adjArray: list[int],
+        currentCoord: Coord
 ) -> int:
-    return pathCost + 1
+    return pathCost + adjArray[currentCoord.r] 
  
 
 # ------------------------------------------ for determineing algorithm efficiency -------------------
