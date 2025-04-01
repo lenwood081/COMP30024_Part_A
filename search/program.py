@@ -468,6 +468,8 @@ def admissable(
 
 # ------------------------------------------ for determineing algorithm efficiency -------------------
 
+# function that is for personal analysis of algorithms
+# and assistance in report
 def solutionEvaluation(solutionBfs, solutionAstar):
     # compare solutions
     print("Solution for BFS:")
