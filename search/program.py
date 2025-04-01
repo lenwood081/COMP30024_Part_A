@@ -55,7 +55,7 @@ def search(
     solution2 = bfsSearch(board, startCoord)
 
     # comarisons
-    solutionEvaluation(solution2, solution1)
+    # solutionEvaluation(solution2, solution1)
 
     # ... (your solution goes here!)
     # ...
@@ -68,7 +68,7 @@ def search(
 
 # -------------------------------------- utility functions -----------------
 
-# find starting coordinate, or the first red frog 
+# find starting coordinate, or the first red frog from the baord 
 def findRedFrog(
         board: dict[Coord, CellState],
 ) -> Coord | None:
@@ -101,8 +101,6 @@ def getDirection(startCoord: Coord, endCoord: Coord) -> Direction:
 
     # check reight 
     return Direction.Right
-
-
 
 # function that will generate the coordinates of all possible moves a frog can make in a current position
 # should take into account if the position is occupied by a frog
@@ -137,7 +135,6 @@ def generatePaths(
 
         # all others are frogs
         # check for leeping
-
         leepingList = checkLeeping(board, tempCoord, coordinate, move, [])
         coordList.extend(leepingList)
     
@@ -194,6 +191,7 @@ def checkLeeping(
 # --------------------------------------- breadth first search ------------------------------
 
 # must preform bfs as well as keep track of the path
+# going to use a dictioary the keeps track of each previous move
 def bfsSearch(
     board: dict[Coord, CellState],
     startCoord: Coord,
@@ -271,6 +269,8 @@ def bfsSearch(
 # ------------------------------------- A* search -------------------------------------------
 
 # A star algorithm
+# uses a admissable heuristic based on the minimum number of moves required to get to the end if the problem
+# as compressed to one array
 def aStar(
         board: dict[Coord, CellState],
         startCoord: Coord        
@@ -300,17 +300,13 @@ def aStar(
          # pop first item from queue
         position = queue.pop(0) 
         
+        # remove seen places (needed for cases where ther is no solution)
+        if position[0][0] in record:
+            continue
+
         # global vairble to record expanded node
         global aStarexpandedNodes
         aStarexpandedNodes += 1
-
-        # remove seen places (needed for cases where ther is no solution)
-        if position[0][0] in record:
-            continue
-
-        # remove seen places (needed for cases where ther is no solution)
-        if position[0][0] in record:
-            continue
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -347,6 +343,7 @@ def aStar(
 
 
 # a method that generates paths from a position, calculates their eitimated cost and inserts them into a soted list
+# used for A* and uses admissable heuristic
 def addNewAPositions(
         board: dict[Coord, CellState],
         currentCoord: Coord,
@@ -358,12 +355,17 @@ def addNewAPositions(
 
     # sorry this is a bit of a mess
     # this is using distance to the end as a heuristic
+    # this code was the code baing used for the non-admisaable heuristic (distanceToEnd)
      #newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
 
     # this is using the addmissable heuristic
+    # combines the next coordinate, direction list, previous coordinate, move cost, and heuristic cost evaluation
+    # into a tuple, then puts all of these tuples into a list representing information about all possible moves
     newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [admissable(currentCost, adjArray, entry[0]) for entry in templist]))
     newList = currentList.copy()
     
+    # to avoid having to search for the lowest heuristic next move every time, we maintain a sorted lsit of all moves
+    # and insert in sorted order
     # use a binary search and insert strategy
     if len(newList) == 0:
         newList.append(newPositionsList.pop(0))
@@ -390,7 +392,6 @@ def addNewAPositions(
                 newList.insert(temp+1, newPositionsList[i])
                 break
                 
-
             # check if higher or lower then temp
             if newPositionsList[i][3] > newList[temp][3]:
                 lower = temp
@@ -406,7 +407,9 @@ def addNewAPositions(
 
     return newList
 
-
+# this is a non-deterministic heuristic that we trialed, it is in general faster then the admissable one
+# however is not always optimal
+# NOT USING IN FINAL SUBMISSION
 # A star heuristic, just determine the distance to the end, or number or rows to the end
 def distanceToEnd(
         currentCoord: Coord,
@@ -452,12 +455,6 @@ def createAdmissableArray(
             j += 1
             moves += 1
         numberOfMoves[i] = moves
-        if i == BOARD_N -1:
-            numberOfMoves[i] = 0 
-
-    # for debugging
-    print(blueFrogList)
-    print(numberOfMoves)
 
     return numberOfMoves
 
