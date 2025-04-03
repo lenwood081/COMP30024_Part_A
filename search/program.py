@@ -55,7 +55,7 @@ def search(
     solution2 = bfsSearch(board, startCoord)
 
     # comarisons
-    solutionEvaluation(solution2, solution1)
+    # solutionEvaluation(solution2, solution1)
 
     # ... (your solution goes here!)
     # ...
@@ -133,10 +133,10 @@ def generatePaths(
             coordList.append((tempCoord, dirList))
             continue
 
-        # all others are frogs
         # check for leeping
-        leepingList = checkLeeping(board, tempCoord, coordinate, move, [])
-        coordList.extend(leepingList)
+        if board.get(tempCoord) == CellState.BLUE:
+            leepingList = checkLeeping(board, tempCoord, coordinate, move, [])
+            coordList.extend(leepingList)
     
     return coordList
             
@@ -177,7 +177,7 @@ def checkLeeping(
             continue
         
         # check if jumpable square
-        if futureLeepingCoord not in board or board.get(futureLeepingCoord) == CellState.LILY_PAD:
+        if futureLeepingCoord not in board or board.get(futureLeepingCoord) != CellState.BLUE:
             continue
 
         # preform leeping list on potenual hit
