@@ -55,7 +55,7 @@ def search(
     solution2 = bfsSearch(board, startCoord)
 
     # comarisons
-    # solutionEvaluation(solution2, solution1)
+    solutionEvaluation(solution2, solution1)
 
     # ... (your solution goes here!)
     # ...
