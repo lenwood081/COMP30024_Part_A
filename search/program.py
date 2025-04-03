@@ -7,6 +7,7 @@ from typing import Dict, List
 
 from .core import BOARD_N, CellState, Coord, Direction, MoveAction
 from .utils import render_board
+import time
 
 # as we are not using the up direction for part a of this project im adding all the avalible directions as a list here
 dirPartA = [
@@ -52,7 +53,17 @@ def search(
     if startCoord == None:
         return None
     solution1 = aStar(board, startCoord)
-    solution2 = bfsSearch(board, startCoord)
+    # solution2 = bfsSearch(board, startCoord)
+
+    start_time = time.perf_counter()
+
+    solution1 = aStar(board, startCoord)
+
+    end_time = time.perf_counter()
+
+    execution_time = end_time - start_time
+
+    print(f"Execution time: {execution_time:.6f} seconds")
 
     # comarisons
     # solutionEvaluation(solution2, solution1)
@@ -352,6 +363,9 @@ def addNewAPositions(
         adjArray: list[int]
 ) -> list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]:
     templist = generatePaths(board, currentCoord)
+
+    if not templist:
+        return []
 
     # sorry this is a bit of a mess
     # this is using distance to the end as a heuristic
