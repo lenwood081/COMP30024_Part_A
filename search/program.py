@@ -17,11 +17,6 @@ dirPartA = [
         (0, 1),
         (0, -1)]
 
-# global varible is here only for testing and comparing the search strategies
-bfSexpandedNodes = 0
-bfSRepeatedNodes = 0
-aStarexpandedNodes = 0
-
 def search(
     board: dict[Coord, CellState]
 ) -> list[MoveAction] | None:
@@ -48,33 +43,11 @@ def search(
 
     # Do some impressive AI stuff here to find the solution...
 
-    # testing start for vis 1, 3 and 4
     startCoord = findRedFrog(board)
     if startCoord == None:
         return None
     solution1 = aStar(board, startCoord)
-    # solution2 = bfsSearch(board, startCoord)
 
-    start_time = time.perf_counter()
-
-    solution1 = aStar(board, startCoord)
-
-    end_time = time.perf_counter()
-
-    execution_time = end_time - start_time
-
-    print(f"Execution time: {execution_time:.6f} seconds")
-
-    # comarisons
-    # solutionEvaluation(solution2, solution1)
-
-    # ... (your solution goes here!)
-    # ...
-
-    # Here we're returning "hardcoded" actions as an example of the expected
-    # output format. Of course, you should instead return the result of your
-    # search algorithm. Remember: if no solution is possible for a given input,
-    # return `None` instead of a list.
     return solution1
 
 # -------------------------------------- utility functions -----------------
@@ -199,84 +172,6 @@ def checkLeeping(
     return leepingList
 
 
-# --------------------------------------- breadth first search ------------------------------
-
-# must preform bfs as well as keep track of the path
-# going to use a dictioary the keeps track of each previous move
-def bfsSearch(
-    board: dict[Coord, CellState],
-    startCoord: Coord,
-) -> list[MoveAction] | None:
-    
-    # bfs "queue" (coord, direction listing previous transition, previous Coord) pairs
-    queue: list[tuple[tuple[Coord, list[Direction]], Coord]] = []
-    # list of coordinate key previous coordinate values pairs to reverse engeneer path {Coord: Coord}
-    #  None means that it was the start
-    record: dict[Coord, tuple[Coord, list[Direction]] | None] = {}
-
-    # add first coordinate to lists
-    record[startCoord] = None 
-
-    # solution Coord
-    finalCoord = None
-    
-    # pop first item and generate paths
-    possiblePositions = generatePaths(board, startCoord)
-    positionsCombined = list(zip(possiblePositions,
-                            [startCoord for i in range(len(possiblePositions))])) 
-    queue.extend(positionsCombined)
-
-    while len(queue) > 0:
-        # pop first item from queue
-        position = queue.pop(0) 
-
-        # check if in visited
-        if position[0][0] in record:
-            # global varible for checking how well state checking went
-            global bfSRepeatedNodes
-            bfSRepeatedNodes += 1
-            continue
-
-        # global varible for checking expanded nodes
-        global bfSexpandedNodes
-        bfSexpandedNodes += 1
-
-        # add to record
-        record[position[0][0]] = (position[1], position[0][1]) 
-
-        # check win condition
-        if position[0][0].r == BOARD_N -1:
-            finalCoord = position[0][0]
-            break
-
-        # expand all child nodes
-        possiblePositions = generatePaths(board, position[0][0])
-        positionsCombined = list(zip(possiblePositions,
-                            [position[0][0] for i in range(len(possiblePositions))])) 
-        queue.extend(positionsCombined)
-    
-    # now to reconstruct the solution from the record
-    moves:list[MoveAction] = []
-   
-    # check if a solutionCoord exits
-    # if not just return a empty list
-    if finalCoord == None:
-        return None 
-
-    # need to figure out direction of movement as well
-    previousCoord = record[finalCoord]
-    
-    # loop through until start is reached
-    while previousCoord != None:
-        moves.append(MoveAction(previousCoord[0], previousCoord[1]))
-
-        # change to next position
-        previousCoord = record[previousCoord[0]]
-    
-    # reversed moves to start from begining
-    reversedMoves = moves[::-1]    
-    return reversedMoves 
-
 # ------------------------------------- A* search -------------------------------------------
 
 # A star algorithm
@@ -314,10 +209,6 @@ def aStar(
         # remove seen places (needed for cases where ther is no solution)
         if position[0][0] in record:
             continue
-
-        # global vairble to record expanded node
-        global aStarexpandedNodes
-        aStarexpandedNodes += 1
 
         # add to record
         record[position[0][0]] = (position[1], position[0][1]) 
@@ -364,14 +255,6 @@ def addNewAPositions(
 ) -> list[tuple[tuple[Coord, list[Direction]], Coord, int, int]]:
     templist = generatePaths(board, currentCoord)
 
-    if not templist:
-        return []
-
-    # sorry this is a bit of a mess
-    # this is using distance to the end as a heuristic
-    # this code was the code baing used for the non-admisaable heuristic (distanceToEnd)
-     #newPositionsList: list[tuple[tuple[Coord, list[Direction]], Coord, int, int]] = list(zip(templist, [currentCoord for i in range(len(templist))], [currentCost for i in range(len(templist))], [distanceToEnd(entry[0], currentCost) for entry in templist]))
-
     # this is using the addmissable heuristic
     # combines the next coordinate, direction list, previous coordinate, move cost, and heuristic cost evaluation
     # into a tuple, then puts all of these tuples into a list representing information about all possible moves
@@ -381,7 +264,7 @@ def addNewAPositions(
     # to avoid having to search for the lowest heuristic next move every time, we maintain a sorted lsit of all moves
     # and insert in sorted order
     # use a binary search and insert strategy
-    if len(newList) == 0:
+    if len(newList) == 0 and len(newPositionsList) > 0:
         newList.append(newPositionsList.pop(0))
 
     for i in range(len(newPositionsList)):
@@ -420,16 +303,6 @@ def addNewAPositions(
                 break
 
     return newList
-
-# this is a non-deterministic heuristic that we trialed, it is in general faster then the admissable one
-# however is not always optimal
-# NOT USING IN FINAL SUBMISSION
-# A star heuristic, just determine the distance to the end, or number or rows to the end
-def distanceToEnd(
-        currentCoord: Coord,
-        pathCost: int
-) -> int:
-    return (BOARD_N-1) - currentCoord.r + pathCost 
 
 # admissable a* heuristic, create a array indicating the minimum amoutn of moves required to reach the end
 # from a row, use the check if there is a "b" or not
@@ -479,28 +352,4 @@ def admissable(
 ) -> int:
     return pathCost + adjArray[currentCoord.r] 
  
-
-# ------------------------------------------ for determineing algorithm efficiency -------------------
-
-# function that is for personal analysis of algorithms
-# and assistance in report
-def solutionEvaluation(solutionBfs, solutionAstar):
-    # compare solutions
-    print("Solution for BFS:")
-    # print_result(solutionBfs)
-    print("\n\n---------------------------------------------\n\n")
-    print("Solution for A*:")
-    # print_result(solutionAstar)
-    print("\n\n---------------------------------------------\n\n")
-
-    print("BFS analysis:")
-    print(f"Number of expanded Nodes: {bfSexpandedNodes}")
-    print(f"Number of repeated Nodes blocked by repeated state checking: {bfSRepeatedNodes}")
-
-    print("\n\n---------------------------------------------\n\n")
-    print("A* analysis")
-    print(f"Number of expanded Nodes: {aStarexpandedNodes}")
-    print("\n\n---------------------------------------------\n\n")
-    
-
 
